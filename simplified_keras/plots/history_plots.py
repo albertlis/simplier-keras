@@ -28,3 +28,4 @@ def plot_acc_and_loss(history, figsize=(10, 10)):
     fig.set_figheight(figsize[0])
     fig.set_figwidth(figsize[1])
     plt.show()
+    return fig

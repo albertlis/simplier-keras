@@ -1,4 +1,4 @@
-# Simplier keras
+# simplified keras
 Common used actions in keras
 
 ## Table of contents
@@ -16,7 +16,7 @@ Common used actions in keras
 This package is a set of common used actions in keras. At this moment includes:
 * [Fast train and validation generators creation](#generators)
 * [Default callbacks](#default-callbacks)
-* [Accuracy and Loss plot](#accuracy-and-loss-plot)****
+* [Accuracy and Loss plot](#accuracy-and-loss-plot)
 * [Predictions with image plot](#predictions-with-image-plot)
 * [Histogram with CDF and image plot](#histogram-with-cdf-and-image-plot)
 
@@ -24,18 +24,16 @@ This package is a set of common used actions in keras. At this moment includes:
 - Keras - version 2.4.3
 - Matplotlib - version 3.3.3
 - NumPy - version 1.19.4
-- OpenCV - version 4.4.0.46
-- TensorFlow - version 2.4.0rc1
 
 ## Setup
-* Install from PyPi: `pip install simplier-keras`
+* Install from PyPi: `pip install simplified-keras`
 
 ## Documentation
-#### Status: _in progress_
+
 ### Generators
 ```python
 from keras.preprocessing.image import ImageDataGenerator
-from simplier_keras.dir_flow_generators import get_train_val_generators
+from simplified_keras.dir_flow_generators import get_train_val_generators
 
 img_size = (48, 48)
 img_datagen = ImageDataGenerator(rescale=1/255)
@@ -46,19 +44,19 @@ train_generator, validation_generator = get_train_val_generators(img_datagen, da
 Signature:
 
 ```python
-def get_train_val_generators(img_datagen: ImageDataGenerator, data_dir='../data/', target_size=None, color_mode='rgb',
-                             batch_size=128, class_mode='categorical')
+def get_train_val_generators(img_datagen: ImageDataGenerator, data_dir='../data/', target_size=None, 
+                             color_mode='rgb', batch_size=128, class_mode='categorical')
 ```
 
 ### Default callbacks
 
 ```python
-from simplier_keras.default_callbacks import get_default_callbacks
+from simplified_keras.default_callbacks import get_default_callbacks
 
 callbacks = get_default_callbacks('vgg16_calssifier')
 
-hist = model.fit(train_features, train_labels, batch_size=128, epochs=100, validation_data=(val_features, val_labels),
-                     callbacks=callbacks, verbose=2, steps_per_epoch=nr_of_train_imgs/train_batch_size)
+hist = model.fit(train_generator, steps_per_epoch=train_steps, validation_data=validation_generator, 
+                 validation_steps=valid_steps, epochs=100, callbacks=callbacks, verbose=2)
 ```
 Signature:
 
@@ -75,53 +73,49 @@ def get_default_callbacks(model_name):
 ### Accuracy and Loss plot
 
 ```python
-from simplier_keras.plots.history_plots import plot_acc_and_loss
+from simplified_keras.plots.history_plots import plot_acc_and_loss
 
-history = model.fit(train_generator,
-                    steps_per_epoch=train_steps,
-                    epochs=5,
-                    validation_data=validation_generator,
-                    validation_steps=valid_steps,
-                    callbacks=callbacks
-                    )
+history = model.fit(train_gen, teps_per_epoch=train_steps, epochs=5, alidation_data=val_gen, 
+                    validation_steps=val_steps, callbacks=callbacks)
 
 plot_acc_and_loss(history)
 ```
 
 Result:
 
---add image--
+[![history.png](https://i.postimg.cc/YqYgStNM/t.png)](https://postimg.cc/8jksKQn0)
 
 ### Predictions with image plot
 
 ```python
 from keras.models import load_model
 from keras.preprocessing.image import ImageDataGenerator
-from simplier_keras.dir_flow_generators import get_train_val_generators
-from simplier_keras.plots import plot_predictions_with_img
+from simplified_keras.dir_flow_generators import get_train_val_generators
+from simplified_keras.plots import plot_predictions_with_img
 
 img_size = (48, 48)
 img_datagen = ImageDataGenerator(rescale=1/255)
 
 _, validation_generator = get_train_val_generators(img_datagen, data_dir='../data/normal/',
-                                                                 color_mode='grayscale', target_size=img_size)
+                                                   color_mode='grayscale', target_size=img_size)
 model = load_model('../models/standard_model.h5')
 
 batch, labels = validation_generator.next()
 preds = model.predict(batch)
 
-plot_predictions_with_img(1, preds, labels, batch)
+named_labels = ['a', 'b', 'c', 'd', 'e', 'f', 'g']
+plot_predictions_with_img(1, preds, labels, batch, named_labels)
 ```
 
 Result:
 
---add image--
+[![p.png](https://i.postimg.cc/Hs2dD4Tw/p.png)](https://postimg.cc/ykkw0Rgx)
 
 ### Histogram with CDF and image plot
 
 ```python
 import cv2
-from simplier_keras.plots import plot_gray_img_with_histogram
+from simplified_keras.plots import plot_gray_img_with_histogram
 
 img = cv2.imread(f'{src_train_path}/0/241.png', 0)
 plot_gray_img_with_histogram(img)
@@ -131,12 +125,15 @@ plot_gray_img_with_histogram(img2)
 
 Result:
 
---add image--
+[![history1.png](https://i.postimg.cc/JzwN3Pc3/h1.png)](https://i.postimg.cc/JzwN3Pc3/h1.png)
+[![history2.png](https://i.postimg.cc/x1KK6Mtw/h2.png)](https://i.postimg.cc/x1KK6Mtw/h2.png)
+
 
 ## PyPi
-[simplier-keras](add-link)
+[simplified-keras](add-link)
 
 ## TODO
+- nothing :)
 
 ## Development
 Want to contribute? Great!
