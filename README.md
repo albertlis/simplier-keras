@@ -16,7 +16,7 @@ Common used actions in keras
 This package is a set of common used actions in keras. At this moment includes:
 * [Fast train and validation generators creation](#generators)
 * [Default callbacks](#default-callbacks)
-* [Accuracy and Loss plot](#accuracy-and-loss-plot)
+* [Accuracy and Loss plot](#accuracy-and-loss-plot)****
 * [Predictions with image plot](#predictions-with-image-plot)
 * [Histogram with CDF and image plot](#histogram-with-cdf-and-image-plot)
 
