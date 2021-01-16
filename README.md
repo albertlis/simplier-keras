@@ -38,13 +38,13 @@ from simplified_keras.dir_flow_generators import get_train_val_generators
 img_size = (48, 48)
 img_datagen = ImageDataGenerator(rescale=1/255)
 
-train_generator, validation_generator = get_train_val_generators(img_datagen, data_dir='../data/normal/',
+train_generator, validation_generator = get_train_val_generators(img_datagen, data_dir='../data/normal',
                                                                  color_mode='grayscale', target_size=img_size)
 ```
 Signature:
 
 ```python
-def get_train_val_generators(img_datagen: ImageDataGenerator, data_dir='../data/', color_mode='rgb', 
+def get_train_val_generators(img_datagen: ImageDataGenerator, data_dir='../data', color_mode='rgb', 
                              batch_size=128, class_mode='categorical', **kwargs)
 ```
 
@@ -75,7 +75,7 @@ def get_default_callbacks(model_name):
 ```python
 from simplified_keras.plots.history_plots import plot_acc_and_loss
 
-history = model.fit(train_gen, teps_per_epoch=train_steps, epochs=5, alidation_data=val_gen, 
+history = model.fit(train_gen, teps_per_epoch=train_steps, epochs=5, validation_data=val_gen, 
                     validation_steps=val_steps, callbacks=callbacks)
 
 fig = plot_acc_and_loss(history)
@@ -118,9 +118,9 @@ import cv2
 from simplified_keras.plots import plot_gray_img_with_histogram
 
 img = cv2.imread(f'{src_train_path}/0/241.png', 0)
-plot_gray_img_with_histogram(img)
+fig1 = plot_gray_img_with_histogram(img)
 img2 = stretch_histogram(img)
-fig = plot_gray_img_with_histogram(img2)
+fig2 = plot_gray_img_with_histogram(img2)
 ```
 
 Result:
