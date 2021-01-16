@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def plot_predictions_with_img(i, predictions, labels, img, named_labels=None):
+def plot_predictions_with_img(i, predictions, labels, img, named_labels=None, grayscale=False):
     predictions, labels, img = predictions[i], labels[i], img[i]
     predicted_label = np.argmax(predictions)
     true_value = np.argmax(labels)
@@ -20,7 +20,10 @@ def plot_predictions_with_img(i, predictions, labels, img, named_labels=None):
 
     plt.subplot(1, 2, 2)
 
-    plt.imshow(img, cmap='gray')
+    if grayscale:
+        plt.imshow(np.squeeze(img), cmap='gray')
+    else:
+        plt.imshow(img)
     plt.xlabel("Predicted: {} {:2.0f}% (Real: {})".format(named_labels[predicted_label], 100 * np.max(predictions),
                                                           named_labels[true_value]))
     plt.show()

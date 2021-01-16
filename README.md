@@ -44,8 +44,8 @@ train_generator, validation_generator = get_train_val_generators(img_datagen, da
 Signature:
 
 ```python
-def get_train_val_generators(img_datagen: ImageDataGenerator, data_dir='../data/', target_size=None, 
-                             color_mode='rgb', batch_size=128, class_mode='categorical')
+def get_train_val_generators(img_datagen: ImageDataGenerator, data_dir='../data/', color_mode='rgb', 
+                             batch_size=128, class_mode='categorical', **kwargs)
 ```
 
 ### Default callbacks
@@ -78,7 +78,7 @@ from simplified_keras.plots.history_plots import plot_acc_and_loss
 history = model.fit(train_gen, teps_per_epoch=train_steps, epochs=5, alidation_data=val_gen, 
                     validation_steps=val_steps, callbacks=callbacks)
 
-plot_acc_and_loss(history)
+fig = plot_acc_and_loss(history)
 ```
 
 Result:
@@ -96,7 +96,7 @@ from simplified_keras.plots import plot_predictions_with_img
 img_size = (48, 48)
 img_datagen = ImageDataGenerator(rescale=1/255)
 
-_, validation_generator = get_train_val_generators(img_datagen, data_dir='../data/normal/',
+_, validation_generator = get_train_val_generators(img_datagen, data_dir='../data/normal',
                                                    color_mode='grayscale', target_size=img_size)
 model = load_model('../models/standard_model.h5')
 
@@ -104,7 +104,7 @@ batch, labels = validation_generator.next()
 preds = model.predict(batch)
 
 named_labels = ['a', 'b', 'c', 'd', 'e', 'f', 'g']
-plot_predictions_with_img(1, preds, labels, batch, named_labels)
+fig = plot_predictions_with_img(1, preds, labels, batch, named_labels, grayscale=True)
 ```
 
 Result:
@@ -120,7 +120,7 @@ from simplified_keras.plots import plot_gray_img_with_histogram
 img = cv2.imread(f'{src_train_path}/0/241.png', 0)
 plot_gray_img_with_histogram(img)
 img2 = stretch_histogram(img)
-plot_gray_img_with_histogram(img2)
+fig = plot_gray_img_with_histogram(img2)
 ```
 
 Result:
