@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
-
+import seaborn as sns
+import pandas as pd
 
 def plot_predictions_with_img(i, predictions, labels, img, named_labels=None, grayscale=False):
     predictions, labels, img = predictions[i], labels[i], img[i]
@@ -44,4 +45,17 @@ def plot_gray_img_with_histogram(img, figsize=(10, 5), brightness_range=(0, 255)
 
     vmin, vmax = brightness_range
     ax2.imshow(img, cmap='gray', vmin=vmin, vmax=vmax)
+    return fig
+
+
+def plot_confusion_matrix(cm, labels, figsize=(10, 8)):
+    con_mat_df = pd.DataFrame(cm, index = labels, columns = labels)
+    fig = plt.figure(figsize=figsize)
+    if issubclass(cm.dtype.type, np.integer):
+        sns.heatmap(con_mat_df, annot=True,cmap=plt.cm.Blues, fmt='d')
+    else:
+        sns.heatmap(con_mat_df, annot=True,cmap=plt.cm.Blues)
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+    plt.show()
     return fig

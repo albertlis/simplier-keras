@@ -14,23 +14,36 @@ Common used actions in keras
 
 ## General info
 This package is a set of common used actions in keras. At this moment includes:
-* [Fast train and validation generators creation](#generators)
-* [Default callbacks](#default-callbacks)
-* [Accuracy and Loss plot](#accuracy-and-loss-plot)
-* [Predictions with image plot](#predictions-with-image-plot)
-* [Histogram with CDF and image plot](#histogram-with-cdf-and-image-plot)
+- Main package
+    * [Default callbacks](#default-callbacks)
+    * [Fast train and validation generators creation](#generators)
+- Plots
+    * [Accuracy and Loss plot](#accuracy-and-loss-plot)
+    * [Predictions with image plot](#predictions-with-image-plot)
+    * [Histogram with CDF and image plot](#histogram-with-cdf-and-image-plot)
+    * [Confusion matrix](#confusion-matrix-plot)
+- Metrics
+    * [Confusion matrix](#confusion-matrix)
+    * [Statistics](#statistics)
+- Transformations
+    * [Convert predictions to classes array](#convert-predictions-to-classes-array)
+    * [Convert one hot encoding to sparse](#convert-one-hot-encoding-to-sparse)
 
 ## Libraries
 - Keras - version 2.4.3
 - Matplotlib - version 3.3.3
 - NumPy - version 1.19.4
+- Tensorflow - version 2.4.0rc1
+- Pandas - version 1.1.5
+- Seaborn - version 0.11.1
 
 ## Setup
 * Install from PyPi: `pip install simplified-keras`
 
 ## Documentation
 
-### Generators
+### Main package
+#### Generators
 ```python
 from keras.preprocessing.image import ImageDataGenerator
 from simplified_keras.dir_flow_generators import get_train_val_generators
@@ -69,8 +82,8 @@ def get_default_callbacks(model_name):
                             save_best_only=True, verbose=1)
     ]
 ```
-
-### Accuracy and Loss plot
+### Plots
+#### Accuracy and Loss plot
 
 ```python
 from simplified_keras.plots.history_plots import plot_acc_and_loss
@@ -85,7 +98,7 @@ Result:
 
 [![history.png](https://i.postimg.cc/YqYgStNM/t.png)](https://postimg.cc/8jksKQn0)
 
-### Predictions with image plot
+#### Predictions with image plot
 
 ```python
 from keras.models import load_model
@@ -111,7 +124,7 @@ Result:
 
 [![p.png](https://i.postimg.cc/Hs2dD4Tw/p.png)](https://postimg.cc/ykkw0Rgx)
 
-### Histogram with CDF and image plot
+#### Histogram with CDF and image plot
 
 ```python
 import cv2
@@ -128,6 +141,85 @@ Result:
 [![history1.png](https://i.postimg.cc/JzwN3Pc3/h1.png)](https://i.postimg.cc/JzwN3Pc3/h1.png)
 [![history2.png](https://i.postimg.cc/x1KK6Mtw/h2.png)](https://i.postimg.cc/x1KK6Mtw/h2.png)
 
+#### Confusion matrix plot
+
+```python
+from simplified_keras.transformations import predictions_to_classes, one_hot_to_sparse
+from simplified_keras.metrics import get_confusion_matrixes
+from simplified_keras.plots import plot_confusion_matrix
+
+predictions = model.predict(validation_images)
+predicted_classes = predictions_to_classes(predictions)
+sparse_labels = one_hot_to_sparse(validation_labels)
+
+cm, cm_normalized = get_confusion_matrixes(predicted_classes, sparse_labels)
+classes = ['a', 'b', 'c', 'd', 'e', 'f', 'g']
+f1 = plot_confusion_matrix(cm, classes)
+f2 = plot_confusion_matrix(cm_normalized, classes, figsize=(10, 8))
+```
+Results:
+
+<p align="center">
+  <img src = "https://i.postimg.cc/cC7hsXpz/cm.png" width=400>
+  <img src = "https://i.postimg.cc/7PSmMZ5N/cm-normalized.png" width=400>
+</p>
+
+### Metrics
+
+#### Confusion matrix
+
+```python
+from simplified_keras.transformations import predictions_to_classes, one_hot_to_sparse
+from simplified_keras.metrics import get_confusion_matrixes
+
+predictions = model.predict(validation_images)
+predicted_classes = predictions_to_classes(predictions)
+sparse_labels = one_hot_to_sparse(validation_labels)
+
+# Returns two numpy arrays: standard and normalized
+cm, cm_normalized = get_confusion_matrixes(predicted_classes, sparse_labels)
+```
+
+#### Statistics
+
+```python
+from simplified_keras.transformations import predictions_to_classes, one_hot_to_sparse
+from simplified_keras.metrics import get_confusion_matrixes
+from simplified_keras.metrics import get_statistics
+
+predictions = model.predict(validation_images)
+predicted_classes = predictions_to_classes(predictions)
+sparse_labels = one_hot_to_sparse(validation_labels)
+
+cm, cm_normalized = get_confusion_matrixes(predicted_classes, sparse_labels)
+
+stats = get_statistics(cm)
+classes = ['a', 'b', 'c', 'd', 'e', 'f', 'g']
+fig = stats.visualize(classes)
+print(stats.TN) #[2890 3530 2874 2361 2591 3000 2661]
+```
+Visualization:
+[![stat-visualization.png](https://i.postimg.cc/bvpf9BT6/stat-visualization.png)](https://postimg.cc/w1fr6FnJ)
+### Transformations
+
+#### Convert predictions to classes array
+
+```python
+from simplified_keras.transformations import predictions_to_classes
+
+predictions = model.predict(validation_images)
+predicted_classes = predictions_to_classes(predictions)
+print(pedicted_classes) #[6 3 3 ... 6 2 0]
+```
+
+#### Convert one hot encoding to sparse
+
+```python
+from simplified_keras.transformations import predictions_to_classes, one_hot_to_sparse
+
+sparse_labels = one_hot_to_sparse(validation_labels)
+print(sprase_labels) #[6 6 6 ... 6 2 0]
+```
 
 ## PyPi
 [simplified-keras](add-link)
