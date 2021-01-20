@@ -3,6 +3,7 @@ import numpy as np
 import seaborn as sns
 import pandas as pd
 import matplotlib.pyplot as plt
+import os
 
 
 def get_confusion_matrixes(predicted_classes, labels):
@@ -11,9 +12,9 @@ def get_confusion_matrixes(predicted_classes, labels):
     return cm, cm_normalized
 
 
-def get_statistics(confusion_matrix):
+def get_model_statistics(confusion_matrix):
     class Stats:
-        def __init__(self, confusion_matrix):
+        def __init__(self):
             self.FP = confusion_matrix.sum(axis=0) - np.diag(confusion_matrix)
             self.FN = confusion_matrix.sum(axis=1) - np.diag(confusion_matrix)
             self.TP = np.diag(confusion_matrix)
@@ -51,5 +52,37 @@ def get_statistics(confusion_matrix):
                     sns.heatmap(df, annot=True, xticklabels=xtick, cmap=plt.cm.Blues, vmin=0, ax=axes.flat[i])
             plt.show()
             return fig
+    return Stats()
 
-    return Stats(confusion_matrix)
+
+def get_folders_statistics(directory):
+    class Stats:
+        def __init__(self, info):
+            self.info = dict(sorted(info.items(), key=lambda item: item[0]))
+            self.nr_of_elements = sum(info.values())
+
+        def bar_plot(self, figsize=(10, 5), xticks_rotation=60, ticks_size=8, labels_size=10, **kwargs):
+            df = pd.DataFrame(self.info, index=[0])
+            fig, ax = plt.subplots(figsize=figsize)
+            f = sns.barplot(data=df, ax=ax)
+            f.set(xlabel='Classes', ylabel='Images')
+            f.set_xticklabels(f.get_xticklabels(), rotation=xticks_rotation, horizontalalignment='right',
+                              size=ticks_size, **kwargs)
+            yticks = [int(tick) for tick in f.get_yticks()]
+            f.set_yticklabels(yticks, size=ticks_size, **kwargs)
+            plt.rcParams["axes.labelsize"] = labels_size
+            return fig
+
+    subfolders, counted_pictures = [], []
+
+    for element in os.listdir(directory):
+        if os.path.isdir(os.path.join(directory, element)):
+            subfolders.append(element)
+
+    for folder in subfolders:
+        path = os.path.join(directory, folder)
+        nr_of_pictures = len(os.listdir(path))
+        counted_pictures.append(nr_of_pictures)
+
+    inf = {key: value for key, value in zip(subfolders, counted_pictures)}
+    return Stats(inf)

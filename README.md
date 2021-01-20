@@ -24,7 +24,8 @@ This package is a set of common used actions in keras. At this moment includes:
     * [Confusion matrix](#confusion-matrix-plot)
 - Metrics
     * [Confusion matrix](#confusion-matrix)
-    * [Statistics](#statistics)
+    * [Model Statistics](#model-statistics)
+    * [Folder Statistics](#folder-statistics)
 - Transformations
     * [Convert predictions to classes array](#convert-predictions-to-classes-array)
     * [Convert one hot encoding to sparse](#convert-one-hot-encoding-to-sparse)
@@ -180,12 +181,32 @@ sparse_labels = one_hot_to_sparse(validation_labels)
 cm, cm_normalized = get_confusion_matrixes(predicted_classes, sparse_labels)
 ```
 
-#### Statistics
+#### Model Statistics
+Calculates: 
+self.FP
+self.FN
+self.TP
+self.TN
 
+self.TPR # Sensitivity/true positive rate
+
+self.TNR # Specificity/true negative rate
+
+self.PPV # Precision/positive predictive value
+
+self.NPV # Negative predictive value
+
+self.FPR # Fall out or false positive rate
+
+self.FNR # False negative rate
+
+self.FDR # False discovery rate
+
+self.ACC # Overall accuracy for each class
 ```python
 from simplified_keras.transformations import predictions_to_classes, one_hot_to_sparse
 from simplified_keras.metrics import get_confusion_matrixes
-from simplified_keras.metrics import get_statistics
+from simplified_keras.metrics import get_model_statistics
 
 predictions = model.predict(validation_images)
 predicted_classes = predictions_to_classes(predictions)
@@ -193,13 +214,26 @@ sparse_labels = one_hot_to_sparse(validation_labels)
 
 cm, cm_normalized = get_confusion_matrixes(predicted_classes, sparse_labels)
 
-stats = get_statistics(cm)
+stats = get_model_statistics(cm)
 classes = ['a', 'b', 'c', 'd', 'e', 'f', 'g']
 fig = stats.visualize(classes)
 print(stats.TN) #[2890 3530 2874 2361 2591 3000 2661]
 ```
 Visualization:
 [![stat-visualization.png](https://i.postimg.cc/bvpf9BT6/stat-visualization.png)](https://postimg.cc/w1fr6FnJ)
+
+#### Folder statistics
+```python
+from simplified_keras.metrics import get_folders_statistics
+
+stat = get_folders_statistics('../data/normal/train')
+print(stat.nr_of_elements, stat.info) # 28709 {'0': 3995, '1': 436, '2': 4097, '3': 7215, '4': 4830, '5': 3171, '6': 4965}
+fig = stat.bar_plot()
+```
+Result:
+
+<img src="https://i.postimg.cc/yxFcXyvq/folder-stat1.png" alt="drawing" width="500"/>
+
 ### Transformations
 
 #### Convert predictions to classes array
