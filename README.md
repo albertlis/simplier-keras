@@ -182,27 +182,20 @@ cm, cm_normalized = get_confusion_matrixes(predicted_classes, sparse_labels)
 ```
 
 #### Model Statistics
-Calculates: 
-self.FP
-self.FN
-self.TP
-self.TN
+Calculates:
+- FP
+- FN
+- TP
+- TN
+- TPR # Sensitivity/true positive rate
+- TNR # Specificity/true negative rate
+- PPV # Precision/positive predictive value
+- NPV # Negative predictive value
+- FPR # Fall out or false positive rate
+- FNR # False negative rate
+- FDR # False discovery rate
+- ACC # Overall accuracy for each class
 
-self.TPR # Sensitivity/true positive rate
-
-self.TNR # Specificity/true negative rate
-
-self.PPV # Precision/positive predictive value
-
-self.NPV # Negative predictive value
-
-self.FPR # Fall out or false positive rate
-
-self.FNR # False negative rate
-
-self.FDR # False discovery rate
-
-self.ACC # Overall accuracy for each class
 ```python
 from simplified_keras.transformations import predictions_to_classes, one_hot_to_sparse
 from simplified_keras.metrics import get_confusion_matrixes
