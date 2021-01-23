@@ -3,7 +3,8 @@ import numpy as np
 import seaborn as sns
 import pandas as pd
 
-def plot_predictions_with_img(i, predictions, labels, img, named_labels=None, grayscale=False):
+
+def plot_predictions_with_img(i, predictions, labels, img, named_labels=None, grayscale=False, figsize=(10, 5)):
     predictions, labels, img = predictions[i], labels[i], img[i]
     predicted_label = np.argmax(predictions)
     true_value = np.argmax(labels)
@@ -11,7 +12,7 @@ def plot_predictions_with_img(i, predictions, labels, img, named_labels=None, gr
     if not named_labels:
         named_labels = np.arange(len(labels))
 
-    fig = plt.figure(figsize=(10, 5))
+    fig = plt.figure(figsize=figsize)
     plt.subplot(1, 2, 1)
 
     plt.yticks(np.arange(len(labels)), named_labels)
@@ -48,13 +49,21 @@ def plot_gray_img_with_histogram(img, figsize=(10, 5), brightness_range=(0, 255)
     return fig
 
 
-def plot_confusion_matrix(cm, labels, figsize=(10, 8)):
-    con_mat_df = pd.DataFrame(cm, index = labels, columns = labels)
+def plot_confusion_matrix(cm, labels, figsize=(10, 8), heatmap_options=None):
+    heatmap_opt = {'annot': True, 'cmap': plt.cm.Blues}
+    if heatmap_options:
+        heatmap_opt.update(heatmap_options)
+
+    con_mat_df = pd.DataFrame(cm, index=labels, columns=labels)
     fig = plt.figure(figsize=figsize)
+    plt.rcParams['xtick.bottom'] = plt.rcParams['xtick.labelbottom'] = False
+    plt.rcParams['xtick.top'] = plt.rcParams['xtick.labeltop'] = True
+
     if issubclass(cm.dtype.type, np.integer):
-        sns.heatmap(con_mat_df, annot=True,cmap=plt.cm.Blues, fmt='d')
+        sns.heatmap(con_mat_df, fmt='d', **heatmap_opt)
     else:
-        sns.heatmap(con_mat_df, annot=True,cmap=plt.cm.Blues)
+        sns.heatmap(con_mat_df, **heatmap_opt)
+
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
     plt.show()

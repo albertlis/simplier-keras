@@ -35,21 +35,23 @@ def get_model_statistics(confusion_matrix):
             self.FDR = self.FP / (self.TP + self.FP)
             # Overall accuracy for each class
             self.ACC = (self.TP + self.TN) / (self.TP + self.FP + self.FN + self.TN)
+            self.subplot_options = {'nrows': 6, 'ncols': 2, 'figsize': (20, 10)}
+            self.heatmap_options = {'annot': True, 'cmap': plt.cm.Blues, 'vmin': 0}
 
-        def visualize(self, labels, figsize=(20, 10)):
+        def visualize(self, labels):
             attributes = self.__dict__.keys()
-            fig, axes  = plt.subplots(nrows=6, ncols=2, figsize=figsize)
+            fig, axes  = plt.subplots(**self.subplot_options)
             for i, att in enumerate(attributes):
                 attribute = getattr(self, att)
                 attribute = attribute.reshape((1, len(labels)))
-                df = pd.DataFrame(attribute, index = [att], columns = labels)
+                df = pd.DataFrame(attribute, index=[att], columns=labels)
                 xtick = False
                 if i > len(attributes) - 3:
                     xtick = True
                 if issubclass(attribute.dtype.type, np.integer):
-                    sns.heatmap(df, annot=True, xticklabels=xtick, cmap=plt.cm.Blues, vmin=0, ax=axes.flat[i], fmt='d')
+                    sns.heatmap(df, xticklabels=xtick, ax=axes.flat[i], fmt='d', **self.heatmap_options)
                 else:
-                    sns.heatmap(df, annot=True, xticklabels=xtick, cmap=plt.cm.Blues, vmin=0, ax=axes.flat[i])
+                    sns.heatmap(df, xticklabels=xtick, ax=axes.flat[i], **self.heatmap_options)
             plt.show()
             return fig
     return Stats()
@@ -60,17 +62,20 @@ def get_folders_statistics(directory):
         def __init__(self, info):
             self.info = dict(sorted(info.items(), key=lambda item: item[0]))
             self.nr_of_elements = sum(info.values())
+            self.subplot_options = {'figsize': (10, 5)}
+            self.xticks_options = {'rotation': 60, 'horizontalalignment': 'right', 'size': 8}
+            self.yticks_options = {'size': 8}
+            self.rcParams_options = {"axes.labelsize": 10}
 
-        def bar_plot(self, figsize=(10, 5), xticks_rotation=60, ticks_size=8, labels_size=10, **kwargs):
+        def bar_plot(self, labels_size=10):
             df = pd.DataFrame(self.info, index=[0])
-            fig, ax = plt.subplots(figsize=figsize)
+            fig, ax = plt.subplots(**self.subplot_options)
             f = sns.barplot(data=df, ax=ax)
             f.set(xlabel='Classes', ylabel='Images')
-            f.set_xticklabels(f.get_xticklabels(), rotation=xticks_rotation, horizontalalignment='right',
-                              size=ticks_size, **kwargs)
+            f.set_xticklabels(f.get_xticklabels(), **self.xticks_options)
             yticks = [int(tick) for tick in f.get_yticks()]
-            f.set_yticklabels(yticks, size=ticks_size, **kwargs)
-            plt.rcParams["axes.labelsize"] = labels_size
+            f.set_yticklabels(yticks, **self.yticks_options)
+            plt.rcParams.update(self.rcParams_options)
             return fig
 
     subfolders, counted_pictures = [], []
