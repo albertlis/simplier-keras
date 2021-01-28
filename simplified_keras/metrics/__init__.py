@@ -19,23 +19,56 @@ def get_model_statistics(confusion_matrix):
             self.FN = confusion_matrix.sum(axis=1) - np.diag(confusion_matrix)
             self.TP = np.diag(confusion_matrix)
             self.TN = confusion_matrix.sum() - (self.FP + self.FN + self.TP)
+            tp_fn_sum = self.TP + self.FN
+            tn_fp_sum = self.TN + self.FP
+            tp_fp_sum = self.TP + self.FP
+            tn_fn_sum = self.TN + self.FN
+            all_sum = tp_fp_sum + tn_fn_sum
             # Sensitivity/true positive rate
-            self.TPR = self.TP / (self.TP + self.FN)
+            self.TPR = self.TP / tp_fn_sum
+            self.TPR[np.isnan(self.TPR)] = 0
             # Specificity/true negative rate
-            self.TNR = self.TN / (self.TN + self.FP)
+            self.TNR = self.TN / tn_fp_sum
+            self.TNR[np.isnan(self.TNR)] = 0
             # Precision/positive predictive value
-            self.PPV = self.TP / (self.TP + self.FP)
+            self.PPV = self.TP / tp_fp_sum
+            self.PPV[np.isnan(self.PPV)] = 0
             # Negative predictive value
-            self.NPV = self.TN / (self.TN + self.FN)
+            self.NPV = self.TN / tn_fn_sum
+            self.NPV[np.isnan(self.NPV)] = 0
             # Fall out or false positive rate
-            self.FPR = self.FP / (self.FP + self.TN)
+            self.FPR = self.FP / tn_fp_sum
+            self.FPR[np.isnan(self.FPR)] = 0
             # False negative rate
-            self.FNR = self.FN / (self.TP + self.FN)
+            self.FNR = self.FN / tp_fn_sum
+            self.FNR[np.isnan(self.FNR)] = 0
             # False discovery rate
-            self.FDR = self.FP / (self.TP + self.FP)
+            self.FDR = self.FP / tp_fp_sum
+            self.FDR[np.isnan(self.FDR)] = 0
+            # False omission rate
+            self.FOR = self.FN / tn_fn_sum
+            self.FOR[np.isnan(self.FOR)] = 0
+            # Prevalence treshold
+            self.PT = (self.TPR * (-self.TNR + 1) + self.TNR - 1) / (self.TPR + self.TNR - 1)
+            # Threat score / critical succes index (CSI)
+            self.TS = self.TP / (self.TP + self.FN + self.FP)
+            self.TS[np.isnan(self.TS)] = 0
             # Overall accuracy for each class
-            self.ACC = (self.TP + self.TN) / (self.TP + self.FP + self.FN + self.TN)
-            self.subplot_options = {'nrows': 6, 'ncols': 2, 'figsize': (20, 10)}
+            self.ACC = (self.TP + self.TN) / all_sum
+            self.ACC[np.isnan(self.ACC)] = 0
+            # balanced accuracy
+            self.BA = (self.TPR + self.TNR) / 2
+            # F1 score
+            self.F1 = (2 * self.TP) / (2 * self.TP + self.FP + self.FN)
+            self.F1[np.isnan(self.F1)] = 0
+            # Fowlkes–Mallows index
+            self.FM = np.sqrt(self.PPV * self.TPR)
+            # informedness or bookmaker informedness (BM)
+            self.BM = self.TPR + self.TNR - 1
+            # markedness (MK) or deltaP
+            self.MK = self.PPV + self.NPV - 1
+            # todo Matthews correlation coefficient (MCC)
+            self.subplot_options = {'nrows': 10, 'ncols': 2, 'figsize': (20, 10)}
             self.heatmap_options = {'annot': True, 'cmap': plt.cm.Blues, 'vmin': 0}
 
         def visualize(self, labels):
@@ -43,6 +76,9 @@ def get_model_statistics(confusion_matrix):
             fig, axes  = plt.subplots(**self.subplot_options)
             for i, att in enumerate(attributes):
                 attribute = getattr(self, att)
+                if not isinstance(attribute, np.ndarray):
+                    continue
+
                 attribute = attribute.reshape((1, len(labels)))
                 df = pd.DataFrame(attribute, index=[att], columns=labels)
                 xtick = False
@@ -91,3 +127,4 @@ def get_folders_statistics(directory):
 
     inf = {key: value for key, value in zip(subfolders, counted_pictures)}
     return Stats(inf)
+
