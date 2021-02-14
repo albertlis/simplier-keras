@@ -45,29 +45,30 @@ This package is a set of common used actions in keras. At this moment includes:
 
 ### Main package
 #### Generators
+###### train_val_generators
 ```python
 from keras.preprocessing.image import ImageDataGenerator
-from simplified_keras.dir_flow_generators import get_train_val_generators
+from simplified_keras.generators import get_train_val_generators
 
 img_size = (48, 48)
 img_datagen = ImageDataGenerator(rescale=1/255)
 
+#same for get_val_test_generators
 train_generator, validation_generator = get_train_val_generators(img_datagen, data_dir='../data/normal',
                                                                  color_mode='grayscale', target_size=img_size)
 ```
-Signature:
-
+###### numpy_memmap_generator
 ```python
-def get_train_val_generators(img_datagen: ImageDataGenerator, data_dir='../data', color_mode='rgb', 
-                             batch_size=128, class_mode='categorical', **kwargs)
-```
+from simplified_keras.generators import numpy_memmap_generator
 
+train_gen = numpy_memmap_generator('imgs.npy', 'labels.npy', batch_size=64, shuffle_array=False)
+```
 ### Default callbacks
 
 ```python
 from simplified_keras.default_callbacks import get_default_callbacks
 
-callbacks = get_default_callbacks('vgg16_calssifier')
+callbacks = get_default_callbacks('models/vgg16_calssifier.h5', monitor='val_loss', verbose=0)
 
 hist = model.fit(train_generator, steps_per_epoch=train_steps, validation_data=validation_generator, 
                  validation_steps=valid_steps, epochs=100, callbacks=callbacks, verbose=2)
@@ -104,11 +105,11 @@ Result:
 ```python
 from keras.models import load_model
 from keras.preprocessing.image import ImageDataGenerator
-from simplified_keras.dir_flow_generators import get_train_val_generators
+from simplified_keras.generators import get_train_val_generators
 from simplified_keras.plots import plot_predictions_with_img
 
 img_size = (48, 48)
-img_datagen = ImageDataGenerator(rescale=1/255)
+img_datagen = ImageDataGenerator(rescale=1 / 255)
 
 _, validation_generator = get_train_val_generators(img_datagen, data_dir='../data/normal',
                                                    color_mode='grayscale', target_size=img_size)
