@@ -76,12 +76,11 @@ hist = model.fit(train_generator, steps_per_epoch=train_steps, validation_data=v
 Signature:
 
 ```python
-def get_default_callbacks(model_name):
+def get_default_callbacks(model_path, monitor='val_acc', base_patience=3, lr_reduce_factor=0.5, min_lr=1e-7, verbose=1):
     return [
-        clb.ReduceLROnPlateau(monitor='val_acc', factor=0.5, min_lr=1e-6, patience=3, verbose=1),
-        clb.EarlyStopping(monitor='val_acc', patience=7, verbose=1),
-        clb.ModelCheckpoint(monitor='val_acc', filepath=f'../models/{model_name}.h5',
-                            save_best_only=True, verbose=1)
+        clb.ReduceLROnPlateau(monitor=monitor, factor=lr_reduce_factor, min_lr=min_lr, patience=base_patience, verbose=verbose),
+        clb.EarlyStopping(monitor=monitor, patience=(2 * base_patience + 1), verbose=verbose),
+        clb.ModelCheckpoint(monitor=monitor, filepath=model_path, save_best_only=True, verbose=verbose)
     ]
 ```
 ### Plots
