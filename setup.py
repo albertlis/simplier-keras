@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name='simplified_keras',
-    version='0.0.5',
+    version='0.0.6',
     author="Albert Lis",
     author_email="albert.lis.1996@gmail.com",
     description="Common used code in Keras",
