@@ -32,8 +32,16 @@ def plot_predictions_with_img(i, predictions, labels, img, named_labels=None, gr
     return fig
 
 
-# grayscale only
-def plot_gray_img_with_histogram(img, figsize=(10, 5), brightness_range=(0, 255)):
+def plot_img_with_histogram(img, figsize=(10, 5), brightness_range=(0, 255), color_mode='rgb'):
+    if color_mode == 'rgb':
+        return __plot_rgb_img_with_histogram(img, figsize, brightness_range)
+    elif color_mode == 'grayscale':
+        return __plot_gray_img_with_histogram(img, figsize, brightness_range)
+    else:
+        raise ValueError("Unsupported color mode", color_mode)
+
+
+def __plot_gray_img_with_histogram(img, figsize, brightness_range):
     hist, bins = np.histogram(img.flatten(), 256, [0, 256])
 
     cdf = hist.cumsum()
@@ -43,6 +51,21 @@ def plot_gray_img_with_histogram(img, figsize=(10, 5), brightness_range=(0, 255)
     ax1.plot(cdf_normalized, color='b')
     ax1.hist(img.flatten(), 256, [0, 256], color='r')
     ax1.set_xlim([0, 256])
+
+    vmin, vmax = brightness_range
+    ax2.imshow(img, cmap='gray', vmin=vmin, vmax=vmax)
+    return fig
+
+
+def __plot_rgb_img_with_histogram(img, figsize, brightness_range):
+    flatten_img = np.zeros((3, img.shape[0] * img.shape[1]) )
+    for i in range(3):
+        flatten_img[i] = img[:, :, i].flatten()
+
+    df = pd.DataFrame(flatten_img.T, columns=['r', 'g', 'b'])
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=figsize)
+    sns.histplot(data=df, multiple="stack", palette=['red', 'green', 'blue'], ax=ax1)
+    ax1.set_xlim([-1, 256])
 
     vmin, vmax = brightness_range
     ax2.imshow(img, cmap='gray', vmin=vmin, vmax=vmax)
