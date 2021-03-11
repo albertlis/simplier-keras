@@ -1,13 +1,17 @@
 import numpy as np
-from tensorflow.keras.layers import BatchNormalization
+from tensorflow.keras.layers import BatchNormalization, Activation
 from tensorflow.keras.optimizers import Adam
 import cv2
+from tensorflow.keras import activations
+
 
 def predictions_to_classes(predictions):
+    # TODO add posibility to change dtype
     return np.argmax(predictions, axis=-1)
 
 
 def one_hot_to_sparse(tensor):
+    # TODO add posibility to change dtype
     return np.argmax(tensor, axis=1)
 
 
@@ -61,3 +65,9 @@ def normalize_histogram_clahe(img, clip_limit=2.0, tile_grid_size=(8, 8), color_
 def __normalize_clahe(img, clip_limit, tile_grid_size):
     clahe = cv2.createCLAHE(clipLimit=clip_limit, tileGridSize=tile_grid_size)
     return clahe.apply(img)
+
+
+def replace_activations(model, activation):
+    for layer in model.layers:
+        if isinstance(layer, Activation) and hasattr(layer, 'activation'):
+            layer.activation = activation

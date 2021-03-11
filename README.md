@@ -16,7 +16,8 @@ Common used actions in keras
 This package is a set of common used actions in keras. At this moment includes:
 - Main package
     * [Default callbacks](#default-callbacks)
-    * [Fast train and validation generators creation](#generators)
+    * [Restore callbacks](#restore-callbacks)
+    * [Generators](#generators)
 - Plots
     * [Accuracy and Loss plot](#accuracy-and-loss-plot)
     * [Predictions with image plot](#predictions-with-image-plot)
@@ -26,9 +27,16 @@ This package is a set of common used actions in keras. At this moment includes:
     * [Confusion matrix](#confusion-matrix)
     * [Model Statistics](#model-statistics)
     * [Folder Statistics](#folder-statistics)
+    * [Model memory usage](#model-memory-usage)
 - Transformations
     * [Convert predictions to classes array](#convert-predictions-to-classes-array)
     * [Convert one hot encoding to sparse](#convert-one-hot-encoding-to-sparse)
+    * [Unfreeze model](#unfreeze-model)
+    * [Stretch histogram](#stretch-histogram)
+    * [Normalize histogram clahe](#normalize-histogram-clahe) 
+    * [Replace activations](#replace-activations)
+    * [Layers](#layers)
+  
 
 ## Libraries
 - Keras - version 2.4.3
@@ -45,22 +53,25 @@ This package is a set of common used actions in keras. At this moment includes:
 
 ### Main package
 #### Generators
-###### train_val_generators
+###### default generators
 ```python
 from keras.preprocessing.image import ImageDataGenerator
-from simplified_keras.generators import get_train_val_generators
+from simplified_keras.generators import get_train_val_generators, get_val_test_generators
 
 img_size = (48, 48)
 img_datagen = ImageDataGenerator(rescale=1/255)
 
-#same for get_val_test_generators
+# same for get_val_test_generators
+# default: data_dir='../data', color_mode='rgb', batch_size=128, class_mode='categorical'
 train_generator, validation_generator = get_train_val_generators(img_datagen, data_dir='../data/normal',
                                                                  color_mode='grayscale', target_size=img_size)
+val_generator, test_generator = get_val_test_generators(img_datagen, batch_size=32)
 ```
 ###### numpy_memmap_generator
 ```python
 from simplified_keras.generators import numpy_memmap_generator
 
+# default batch_size=128, shuffle_array=True
 train_gen = numpy_memmap_generator('imgs.npy', 'labels.npy', batch_size=64, shuffle_array=False)
 ```
 ### Default callbacks
@@ -78,10 +89,22 @@ Signature:
 ```python
 def get_default_callbacks(model_path, monitor='val_acc', base_patience=3, lr_reduce_factor=0.5, min_lr=1e-7, verbose=1):
     return [
-        clb.ReduceLROnPlateau(monitor=monitor, factor=lr_reduce_factor, min_lr=min_lr, patience=base_patience, verbose=verbose),
-        clb.EarlyStopping(monitor=monitor, patience=(2 * base_patience + 1), verbose=verbose),
-        clb.ModelCheckpoint(monitor=monitor, filepath=model_path, save_best_only=True, verbose=verbose)
+        ReduceLROnPlateau(monitor=monitor, factor=lr_reduce_factor, min_lr=min_lr, patience=base_patience, verbose=verbose),
+        EarlyStopping(monitor=monitor, patience=(2 * base_patience + 1), verbose=verbose),
+        ModelCheckpoint(monitor=monitor, filepath=model_path, save_best_only=True, verbose=verbose)
     ]
+```
+
+### Restore callbacks
+Used to restore callback after paused learning. Model should come from last checkpoint.
+```python
+from simplified_keras.default_callbacks import restore_callbacks, get_default_callbacks
+
+callbacks = get_default_callbacks('models/vgg16_calssifier.h5', monitor='val_loss', verbose=0)
+acc, loss = model.evaluate(val_ds)
+
+# acc or loss depending on the compiled model metrics
+restore_callbacks(callbacks, acc)
 ```
 ### Plots
 #### Accuracy and Loss plot
@@ -195,6 +218,7 @@ Calculates:
 - FNR # False negative rate
 - FDR # False discovery rate
 - ACC # Overall accuracy for each class
+- Much more and still increasing
 
 ```python
 from simplified_keras.transformations import predictions_to_classes, one_hot_to_sparse
@@ -227,6 +251,16 @@ Result:
 
 <img src="https://i.postimg.cc/yxFcXyvq/folder-stat1.png" alt="drawing" width="500"/>
 
+#### Model memory usage
+```python
+from simplified_keras.metrics import get_model_memory_usage
+
+batch_size = 64
+# outputs usage in GB
+usage = get_model_memory_usage(batch_size, model)
+print(usage, 'GB') # 8.34 GB
+```
+
 ### Transformations
 
 #### Convert predictions to classes array
@@ -242,17 +276,65 @@ print(pedicted_classes) #[6 3 3 ... 6 2 0]
 #### Convert one hot encoding to sparse
 
 ```python
-from simplified_keras.transformations import predictions_to_classes, one_hot_to_sparse
+from simplified_keras.transformations import one_hot_to_sparse
 
 sparse_labels = one_hot_to_sparse(validation_labels)
 print(sprase_labels) #[6 6 6 ... 6 2 0]
+```
+#### Stretch histogram
+```python
+from simplified_keras.transformations import stretch_histogram
+
+# default color_mode='rgb'
+stretch_histogram(image, color_mode='grayscale')
+```
+
+#### Unfreeze model
+```python
+from simplified_keras.transformations import unfreeze_model
+from tensorflow.keras.optimizers import Adam
+
+# default params: optimizer=Adam(learning_rate=1e-5), metrics="acc"
+unfreeze_model(model, optimizer=Adam(learning_rate=1e-4), metrics="loss")
+```
+
+#### Normalize histogram clahe
+```python
+from simplified_keras.transformations import normalize_histogram_clahe
+
+# default clip_limit=2.0, tile_grid_size=(8, 8), color_mode='rgb'
+normalize_histogram_clahe(image)
+```
+#### Replace activations
+Replaces all activation functions in given model
+```python
+from simplified_keras.transformations import replace_activations
+from tensorflow.keras.layers import LeakyReLU
+
+l_relu = LeakyReLU()
+replace_activations(model, l_relu)
+```
+#### Layers
+Augumentation layers build on tensorflow image operations
+
+```python
+from simplified_keras.transformations import RandomSaturation, RandomHue, RandomBrightness
+from tensorflow.keras import Sequential
+
+# for more informations about parameters see tf.image docs
+augument_layers = Sequential([
+  RandomSaturation(0.5, 1.5),
+  # must be [0 - 0,5]
+  RandomHue(0.2),
+  RandomBrightness(0.2)
+])
 ```
 
 ## PyPi
 [simplified-keras](add-link)
 
 ## TODO
-- nothing :)
+- test and a lot of thongs :)
 
 ## Development
 Want to contribute? Great!

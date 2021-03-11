@@ -7,14 +7,16 @@ import os
 
 
 def get_confusion_matrixes(predicted_classes, labels):
-    cm= tf.math.confusion_matrix(labels=labels, predictions=predicted_classes).numpy()
-    cm_normalized= np.around(cm.astype('float') / cm.sum(axis=1)[:, np.newaxis], decimals=2)
+    cm = tf.math.confusion_matrix(labels=labels, predictions=predicted_classes).numpy()
+    cm_normalized = np.around(cm / cm.sum(axis=1)[:, np.newaxis], decimals=2)
     return cm, cm_normalized
 
 
-def get_model_statistics(confusion_matrix):
+def get_model_statistics(confusion_matrix, dtype='float32'):
     class Stats:
-        def __init__(self):
+        def __init__(self, confusion_matrix, dtype):
+            if dtype != 'float32':
+                confusion_matrix = confusion_matrix.astype(dtype)
             self.FP = confusion_matrix.sum(axis=0) - np.diag(confusion_matrix)
             self.FN = confusion_matrix.sum(axis=1) - np.diag(confusion_matrix)
             self.TP = np.diag(confusion_matrix)
@@ -70,6 +72,7 @@ def get_model_statistics(confusion_matrix):
             # todo Matthews correlation coefficient (MCC)
             self.subplot_options = {'nrows': 10, 'ncols': 2, 'figsize': (20, 10)}
             self.heatmap_options = {'annot': True, 'cmap': plt.cm.Blues, 'vmin': 0}
+            self.macro_average = self.__calculate_macro()
 
         def visualize(self, labels):
             attributes = self.__dict__.keys()
@@ -90,7 +93,19 @@ def get_model_statistics(confusion_matrix):
                     sns.heatmap(df, xticklabels=xtick, ax=axes.flat[i], **self.heatmap_options)
             plt.show()
             return fig
-    return Stats()
+
+        def __calculate_macro(self):
+            attributes = self.__dict__.keys()
+            macro_averages = {}
+            for i, att in enumerate(attributes):
+                attribute = getattr(self, att)
+                if not isinstance(attribute, np.ndarray):
+                    continue
+                attribute = getattr(self, att)
+                macro_averages[att] = np.mean(attribute)
+            return macro_averages
+
+    return Stats(confusion_matrix, dtype)
 
 
 def get_folders_statistics(directory):
@@ -128,3 +143,35 @@ def get_folders_statistics(directory):
     inf = {key: value for key, value in zip(subfolders, counted_pictures)}
     return Stats(inf)
 
+
+def get_model_memory_usage(batch_size, model):
+    from tensorflow.keras import backend as K
+
+    shapes_mem_count = 0
+    internal_model_mem_count = 0
+    for l in model.layers:
+        layer_type = l.__class__.__name__
+        if layer_type == 'Model':
+            internal_model_mem_count += get_model_memory_usage(batch_size, l)
+        single_layer_mem = 1
+        out_shape = l.output_shape
+        if type(out_shape) is list:
+            out_shape = out_shape[0]
+        for s in out_shape:
+            if s is None:
+                continue
+            single_layer_mem *= s
+        shapes_mem_count += single_layer_mem
+
+    trainable_count = np.sum([K.count_params(p) for p in model.trainable_weights])
+    non_trainable_count = np.sum([K.count_params(p) for p in model.non_trainable_weights])
+
+    number_size = 4.0
+    if K.floatx() == 'float16':
+        number_size = 2.0
+    if K.floatx() == 'float64':
+        number_size = 8.0
+
+    total_memory = number_size * (batch_size * shapes_mem_count + trainable_count + non_trainable_count)
+    gbytes = np.round(total_memory / (1024.0 ** 3), 3) + internal_model_mem_count
+    return gbytes
