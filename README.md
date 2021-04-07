@@ -13,7 +13,7 @@ Common used actions in keras
 * [Contact](#contact)
 
 ## General info
-This package is a set of common used actions in keras. At this moment includes:
+This package is a set of common used actions in keras. At this moment includes (**may be outdated**):
 - Main package
     * [Default callbacks](#default-callbacks)
     * [Restore callbacks](#restore-callbacks)
@@ -39,10 +39,9 @@ This package is a set of common used actions in keras. At this moment includes:
   
 
 ## Libraries
-- Keras - version 2.4.3
 - Matplotlib - version 3.3.3
 - NumPy - version 1.19.4
-- Tensorflow - version 2.4.0rc1
+- Tensorflow - version 2.4.1
 - Pandas - version 1.1.5
 - Seaborn - version 0.11.1
 
@@ -335,7 +334,7 @@ augument_layers = Sequential([
 [simplified-keras](add-link)
 
 ## TODO
-- test and a lot of thongs :)
+- Add tests and a lot of features :)
 
 ## Development
 Want to contribute? Great!

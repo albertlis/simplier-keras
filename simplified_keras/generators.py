@@ -59,7 +59,8 @@ def numpy_memmap_generator(x_path: Path, y_path: Path, batch_size: int = 128, sh
 
 
 def get_train_val_image_datasets(train_path: Path, val_path: Path, image_size: Tuple[int, int], batch_size: int = 64,
-                                 label_mode: str = 'categorical', **kwargs):
+                                 label_mode: str = 'categorical', cache_train: bool = False, cache_val: bool = True,
+                                 **kwargs):
     # loading is on CPU so should be float32 (faster than float16),
     # it will be casted on first model layer to float16 on GPU
     train_ds = tf.keras.preprocessing.image_dataset_from_directory(train_path,
@@ -75,6 +76,6 @@ def get_train_val_image_datasets(train_path: Path, val_path: Path, image_size: T
                                                                  shuffle=False,
                                                                  **kwargs)
 
-    train_ds = train_ds.prefetch(tf.data.AUTOTUNE)
-    val_ds = val_ds.cache().prefetch(tf.data.AUTOTUNE)
+    train_ds = train_ds.cache().prefetch(tf.data.AUTOTUNE) if cache_train else train_ds.prefetch(tf.data.AUTOTUNE)
+    val_ds = val_ds.cache().prefetch(tf.data.AUTOTUNE) if cache_val else val_ds.prefetch(tf.data.AUTOTUNE)
     return train_ds, val_ds
