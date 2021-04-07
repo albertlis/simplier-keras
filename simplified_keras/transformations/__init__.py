@@ -15,7 +15,10 @@ def one_hot_to_sparse(tensor):
     return np.argmax(tensor, axis=1)
 
 
-def unfreeze_model(model, optimizer=Adam(learning_rate=1e-5), metrics="acc"):
+def unfreeze_model(model, optimizer=None, metrics="acc"):
+    if not optimizer:
+        optimizer = Adam(learning_rate=1e-5)
+
     for layer in model.layers:
         if not isinstance(layer, BatchNormalization):
             layer.trainable = True
