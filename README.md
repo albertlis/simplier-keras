@@ -77,11 +77,11 @@ train_gen = numpy_memmap_generator('imgs.npy', 'labels.npy', batch_size=64, shuf
 ### Default callbacks
 
 ```python
-from simplified_keras.default_callbacks import get_default_callbacks
+from simplified_keras.callbacks import get_default_callbacks
 
 callbacks = get_default_callbacks('models/vgg16_calssifier.h5', monitor='val_loss', verbose=0)
 
-hist = model.fit(train_generator, steps_per_epoch=train_steps, validation_data=validation_generator, 
+hist = model.fit(train_generator, steps_per_epoch=train_steps, validation_data=validation_generator,
                  validation_steps=valid_steps, epochs=100, callbacks=callbacks, verbose=2)
 ```
 Signature:
@@ -97,8 +97,9 @@ def get_default_callbacks(model_path, monitor='val_acc', base_patience=3, lr_red
 
 ### Restore callbacks
 Used to restore callback after paused learning. Model should come from last checkpoint.
+
 ```python
-from simplified_keras.default_callbacks import restore_callbacks, get_default_callbacks
+from simplified_keras.callbacks import restore_callbacks, get_default_callbacks
 
 callbacks = get_default_callbacks('models/vgg16_calssifier.h5', monitor='val_loss', verbose=0)
 acc, loss = model.evaluate(val_ds)

@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name='simplified_keras',
-    version='0.0.12',
+    version='0.0.13',
     author="Albert Lis",
     author_email="albert.lis.1996@gmail.com",
     description="Common used code in Keras",
@@ -16,9 +16,11 @@ setuptools.setup(
     install_requires=[
         "matplotlib >= 3.0",
         "numpy >= 1.0",
-        "tensorflow >= 2.0",
+        "tensorflow-gpu >= 2.4.1",
         "seaborn >= 0.10",
-        "pandas >= 1.0"],
+        "pandas >= 1.0",
+        "opencv-python >= 4.0.0"
+    ],
     classifiers=[
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.6",

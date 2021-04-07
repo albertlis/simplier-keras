@@ -72,7 +72,7 @@ def __plot_rgb_img_with_histogram(img, figsize, brightness_range):
     return fig
 
 
-def plot_confusion_matrix(cm, labels, figsize=(10, 8), heatmap_options=None):
+def plot_confusion_matrix(cm, labels, figsize=(10, 8), heatmap_options=None, show=True):
     heatmap_opt = {'annot': True, 'cmap': plt.cm.Blues}
     if heatmap_options:
         heatmap_opt.update(heatmap_options)
@@ -89,5 +89,6 @@ def plot_confusion_matrix(cm, labels, figsize=(10, 8), heatmap_options=None):
 
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
-    plt.show()
+    if show:
+        plt.show()
     return fig
