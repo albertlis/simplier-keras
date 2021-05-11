@@ -4,14 +4,16 @@ import numpy as np
 import os
 import random
 import tensorflow as tf
-
-
-# tran data has to be in train folder and validation data has to be in val folder
 from typing import Tuple
 
 
-def get_train_val_generators(img_datagen: ImageDataGenerator, data_dir='../data', color_mode='rgb',
-                             batch_size=128, class_mode='categorical', **kwargs):
+# tran data has to be in train folder and validation data has to be in val folder
+def get_train_val_generators(img_datagen: ImageDataGenerator,
+                             data_dir: Path = Path('../data'),
+                             color_mode: str = 'rgb',
+                             batch_size: int = 128,
+                             class_mode: str = 'categorical',
+                             **kwargs):
     train_generator = img_datagen.flow_from_directory(os.path.join(data_dir, 'train'),
                                                       batch_size=batch_size,
                                                       color_mode=color_mode,
@@ -25,8 +27,13 @@ def get_train_val_generators(img_datagen: ImageDataGenerator, data_dir='../data'
     return train_generator, validation_generator
 
 
-def get_val_test_generators(img_datagen: ImageDataGenerator, data_dir='../data', color_mode='rgb',
-                            batch_size=128, class_mode='categorical', **kwargs):
+def get_val_test_generators(img_datagen: ImageDataGenerator,
+                            data_dir: Path = Path('../data'),
+                            color_mode: str = 'rgb',
+                            batch_size: int = 128,
+                            class_mode: str = 'categorical',
+                            **kwargs
+                            ):
     validation_generator = img_datagen.flow_from_directory(os.path.join(data_dir, 'val'),
                                                            batch_size=batch_size,
                                                            color_mode=color_mode,
@@ -41,7 +48,10 @@ def get_val_test_generators(img_datagen: ImageDataGenerator, data_dir='../data',
     return validation_generator, test_generator
 
 
-def numpy_memmap_generator(x_path: Path, y_path: Path, batch_size: int = 128, shuffle_array: bool = True):
+def numpy_memmap_generator(x_path: Path,
+                           y_path: Path,
+                           batch_size: int = 128,
+                           shuffle_array: bool = True):
     while True:
         x = np.load(x_path, mmap_mode='r')
         y = np.load(y_path, mmap_mode='r')
@@ -58,12 +68,18 @@ def numpy_memmap_generator(x_path: Path, y_path: Path, batch_size: int = 128, sh
             yield x[slice_indexes], y[slice_indexes]
 
 
-def get_train_val_image_datasets(train_path: Path, val_path: Path, image_size: Tuple[int, int], batch_size: int = 64,
-                                 label_mode: str = 'categorical', cache_train: bool = False, cache_val: bool = True,
+def get_train_val_image_datasets(train_path: Path,
+                                 val_path: Path,
+                                 image_size: Tuple[int, int],
+                                 batch_size: int = 64,
+                                 label_mode: str = 'categorical',
+                                 cache_train: bool = False,
+                                 cache_val: bool = True,
+                                 train_mixup=False,
+                                 mixup_alpha=0.2,
                                  **kwargs):
-    # loading is on CPU so should be float32 (faster than float16),
-    # it will be casted on first model layer to float16 on GPU
-    train_ds = tf.keras.preprocessing.image_dataset_from_directory(train_path,
+
+    train_ds1 = tf.keras.preprocessing.image_dataset_from_directory(train_path,
                                                                    label_mode=label_mode,
                                                                    batch_size=batch_size,
                                                                    image_size=image_size,
@@ -76,6 +92,43 @@ def get_train_val_image_datasets(train_path: Path, val_path: Path, image_size: T
                                                                  shuffle=False,
                                                                  **kwargs)
 
-    train_ds = train_ds.cache().prefetch(tf.data.AUTOTUNE) if cache_train else train_ds.prefetch(tf.data.AUTOTUNE)
     val_ds = val_ds.cache().prefetch(tf.data.AUTOTUNE) if cache_val else val_ds.prefetch(tf.data.AUTOTUNE)
+
+    if train_mixup:
+        train_ds2 = tf.keras.preprocessing.image_dataset_from_directory(train_path,
+                                                                        label_mode=label_mode,
+                                                                        batch_size=batch_size,
+                                                                        image_size=image_size,
+                                                                        **kwargs)
+        train_ds = tf.data.Dataset.zip((train_ds1, train_ds2))
+        train_ds = train_ds.map(
+            lambda ds_one, ds_two: __mix_up(ds_one, ds_two, alpha=mixup_alpha), num_parallel_calls=tf.data.AUTOTUNE
+        )
+        train_ds = train_ds.cache().prefetch(tf.data.AUTOTUNE) if cache_train else train_ds.prefetch(tf.data.AUTOTUNE)
+    else:
+        train_ds = train_ds1.cache().prefetch(tf.data.AUTOTUNE) if cache_train else train_ds1.prefetch(tf.data.AUTOTUNE)
+
     return train_ds, val_ds
+
+
+def __mix_up(ds_one: tf.data.Dataset,
+             ds_two: tf.data.Dataset,
+             alpha: float):
+    images_one, labels_one = ds_one
+    images_two, labels_two = ds_two
+    batch_size = tf.shape(images_one)[0]
+
+    # Sample lambda and reshape it to do the mixup
+    l = __sample_beta_distribution(batch_size, alpha)
+    x_l = tf.reshape(l, (batch_size, 1, 1, 1))
+    y_l = tf.reshape(l, (batch_size, 1))
+
+    images = images_one * x_l + images_two * (1 - x_l)
+    labels = labels_one * y_l + labels_two * (1 - y_l)
+    return images, labels
+
+
+def __sample_beta_distribution(size: int, alpha: float):
+    gamma_1_sample = tf.random.gamma(shape=[size], alpha=alpha)
+    gamma_2_sample = tf.random.gamma(shape=[size], alpha=alpha)
+    return gamma_1_sample / (gamma_1_sample + gamma_2_sample)

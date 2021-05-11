@@ -1,15 +1,29 @@
 import io
-import tensorflow.keras.callbacks as clb
+from pathlib import Path
+from typing import Callable, Tuple
+import numpy as np
 from simplified_keras.metrics import get_confusion_matrixes
 from simplified_keras.plots import plot_confusion_matrix
 from simplified_keras.transformations import predictions_to_classes, one_hot_to_sparse
 import tensorflow as tf
+import tensorflow.keras.callbacks as clb
 import matplotlib.pyplot as plt
 
 
-def get_default_callbacks(model_path, monitor='val_acc', base_patience=3, lr_reduce_factor=0.5, min_lr=1e-7, verbose=1,
-                          log_dir=None, gradients=True, confusion_matrix=True, loss=None, data=None, classes=None,
-                          heatmap_options=None):
+def get_default_callbacks(model_path: Path,
+                          monitor: str = 'val_acc',
+                          base_patience: int = 3,
+                          lr_reduce_factor: float = 0.5,
+                          min_lr: float = 1e-7,
+                          verbose: int = 1,
+                          log_dir: Path = None,
+                          gradients: bool = True,
+                          confusion_matrix: bool = True,
+                          loss: Callable = None,
+                          data: Tuple[np.ndarray, np.ndarray] = None,
+                          classes: list = None,
+                          heatmap_options: dict = None,
+                          csv_logdir: Path = None):
     callbacks = [
         clb.ReduceLROnPlateau(monitor=monitor, factor=lr_reduce_factor, min_lr=min_lr, patience=base_patience, verbose=verbose),
         clb.EarlyStopping(monitor=monitor, patience=(2 * base_patience + 1), verbose=verbose),
@@ -18,10 +32,13 @@ def get_default_callbacks(model_path, monitor='val_acc', base_patience=3, lr_red
     if log_dir:
         callbacks.append(ExtendedTensorBoard(log_dir, gradients, confusion_matrix, loss, data, classes, heatmap_options))
 
+    if csv_logdir:
+        callbacks.append(clb.CSVLogger(csv_logdir, append=True))
+
     return callbacks
 
 
-def restore_callbacks(callbacks, best_monitor_value):
+def restore_callbacks(callbacks: list, best_monitor_value: float):
     for callback in callbacks:
         if isinstance(callback, (clb.ModelCheckpoint, clb.ReduceLROnPlateau)):
             if 'loss' in callback.monitor and best_monitor_value <= 0:
@@ -34,8 +51,15 @@ def restore_callbacks(callbacks, best_monitor_value):
 
 # TODO: Support generators
 class ExtendedTensorBoard(clb.TensorBoard):
-    def __init__(self, log_dir, gradients=True, confusion_matrix=True, loss=None, data=None, classes=None,
-                 heatmap_options=None, **kwargs):
+    def __init__(self,
+                 log_dir: Path,
+                 gradients: bool = True,
+                 confusion_matrix: bool = True,
+                 loss: Callable = None,
+                 data: Tuple[np.ndarray, np.ndarray] = None,
+                 classes: list = None,
+                 heatmap_options: dict = None,
+                 **kwargs):
         super().__init__(log_dir=log_dir, **kwargs)
         self.loss = loss
         self.data = data
