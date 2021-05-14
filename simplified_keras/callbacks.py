@@ -17,13 +17,14 @@ def get_default_callbacks(model_path: Path,
                           min_lr: float = 1e-7,
                           verbose: int = 1,
                           log_dir: Path = None,
-                          gradients: bool = True,
-                          confusion_matrix: bool = True,
+                          gradients: bool = True, #change to false
+                          confusion_matrix: bool = True, #change to false
                           loss: Callable = None,
                           data: Tuple[np.ndarray, np.ndarray] = None,
                           classes: list = None,
                           heatmap_options: dict = None,
-                          csv_logdir: Path = None):
+                          csv_logdir: Path = None,
+                          csv_append: bool = False):
     callbacks = [
         clb.ReduceLROnPlateau(monitor=monitor, factor=lr_reduce_factor, min_lr=min_lr, patience=base_patience, verbose=verbose),
         clb.EarlyStopping(monitor=monitor, patience=(2 * base_patience + 1), verbose=verbose),
@@ -33,7 +34,10 @@ def get_default_callbacks(model_path: Path,
         callbacks.append(ExtendedTensorBoard(log_dir, gradients, confusion_matrix, loss, data, classes, heatmap_options))
 
     if csv_logdir:
-        callbacks.append(clb.CSVLogger(csv_logdir, append=True))
+        if csv_append:
+            callbacks.append(clb.CSVLogger(csv_logdir, append=True))
+        else:
+            callbacks.append(clb.CSVLogger(csv_logdir))
 
     return callbacks
 

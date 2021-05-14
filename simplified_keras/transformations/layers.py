@@ -15,6 +15,14 @@ class RandomSaturation(Layer):
             return x
         return random_saturation(x, self.lower, self.upper)
 
+    def get_config(self):
+        config = super().get_config().copy()
+        config.update({
+            'lower': self.lower,
+            'upper': self.upper
+        })
+        return config
+
 
 class RandomHue(Layer):
     def __init__(self, max_delta, **kwargs):
@@ -26,6 +34,11 @@ class RandomHue(Layer):
             return x
         return random_hue(x, self.max_delta)
 
+    def get_config(self):
+        config = super().get_config().copy()
+        config['max_delta'] = self.max_delta
+        return config
+
 
 class RandomBrightness(Layer):
     def __init__(self, max_delta, **kwargs):
@@ -36,6 +49,11 @@ class RandomBrightness(Layer):
         if not training:
             return x
         return random_brightness(x, self.max_delta)
+
+    def get_config(self):
+        config = super().get_config().copy()
+        config['max_delta'] = self.max_delta
+        return config
 
 
 # class RandomGaussianNoise(tf.keras.layers.Layer):
