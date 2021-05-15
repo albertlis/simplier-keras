@@ -1,6 +1,6 @@
 import io
 from pathlib import Path
-from typing import Callable, Tuple
+from typing import Callable, Tuple, List
 import numpy as np
 from simplified_keras.metrics import get_confusion_matrixes
 from simplified_keras.plots import plot_confusion_matrix
@@ -8,6 +8,7 @@ from simplified_keras.transformations import predictions_to_classes, one_hot_to_
 import tensorflow as tf
 import tensorflow.keras.callbacks as clb
 import matplotlib.pyplot as plt
+import tensorflow.keras.backend as K
 
 
 def get_default_callbacks(model_path: Path,
@@ -24,7 +25,8 @@ def get_default_callbacks(model_path: Path,
                           classes: list = None,
                           heatmap_options: dict = None,
                           csv_logdir: Path = None,
-                          csv_append: bool = False):
+                          csv_append: bool = False,
+                          save_latest: bool = False):
     callbacks = [
         clb.ReduceLROnPlateau(monitor=monitor, factor=lr_reduce_factor, min_lr=min_lr, patience=base_patience, verbose=verbose),
         clb.EarlyStopping(monitor=monitor, patience=(2 * base_patience + 1), verbose=verbose),
@@ -39,10 +41,14 @@ def get_default_callbacks(model_path: Path,
         else:
             callbacks.append(clb.CSVLogger(csv_logdir))
 
+    if save_latest:
+        latest_path = model_path.parent / f'{model_path.stem}_latest{model_path.suffix}'
+        callbacks.append(clb.ModelCheckpoint(monitor=monitor, filepath=latest_path))
+
     return callbacks
 
 
-def restore_callbacks(callbacks: list, best_monitor_value: float):
+def restore_callbacks(callbacks: List[clb.Callback], best_monitor_value: float):
     for callback in callbacks:
         if isinstance(callback, (clb.ModelCheckpoint, clb.ReduceLROnPlateau)):
             if 'loss' in callback.monitor and best_monitor_value <= 0:
@@ -114,3 +120,50 @@ class ExtendedTensorBoard(clb.TensorBoard):
 
         with self._train_writer.as_default():
             tf.summary.image("Confusion Matrix", image, step=epoch)
+
+
+class WarmUpLR(clb.Callback):
+    def __init__(self,
+                 start_lr: float,
+                 final_lr: float,
+                 warmup_epochs: int,
+                 verbose=0):
+
+        super().__init__()
+        if start_lr >= final_lr:
+            raise ValueError('start_lr should be >= final_lr', f' Received: start_lr={start_lr}, final_lr{final_lr}')
+
+        if warmup_epochs <= 0:
+            raise ValueError('warmup_epochs should be > 0', f' Received: warmup_epochs={warmup_epochs}')
+
+        self.current_step = 0
+        self.start_lr = start_lr
+        self.verbose = verbose
+        self.final_lr = final_lr
+        self.epoch = 0
+        self.warmup_epochs = warmup_epochs
+        self.should_update = True
+
+    def on_batch_begin(self, batch, logs=None):
+        if self.should_update:
+            if self.current_step < self.warmup_steps:
+                lr = self.warmup(current_step=self.current_step)
+            else:
+                lr = self.final_lr
+                self.should_update = False
+
+            K.set_value(self.model.optimizer.lr, lr)
+            self.current_step += 1
+
+            if self.verbose > 0:
+                print(f'\nSetting learning rate to {lr}')
+
+    def on_train_begin(self, logs=None):
+        super().on_train_begin(logs)
+        self.warmup_steps = int(self.warmup_epochs * self.params['samples'] / self.params['batch_size'])
+        self.slope = self.final_lr / self.warmup_steps
+
+    def warmup(self, current_step):
+        shift = self.start_lr
+        learning_rate = self.slope * current_step + shift
+        return learning_rate
